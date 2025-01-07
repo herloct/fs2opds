@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"crypto/subtle"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	"github.com/herloct/fs2opds/api/v1d2"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 )
 
@@ -21,6 +24,19 @@ func main() {
 	e.GET("/healthcheck", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Ok")
 	})
+
+	groupOpds := e.Group("/opds")
+	groupOpds.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+		// Be careful to use constant time comparison to prevent timing attacks
+		if subtle.ConstantTimeCompare([]byte(username), []byte("test")) == 1 &&
+			subtle.ConstantTimeCompare([]byte(password), []byte("test")) == 1 {
+			return true, nil
+		}
+		return false, nil
+	}))
+
+	groupV1d2 := groupOpds.Group("/v1.2")
+	v1d2.AppendRoute(groupV1d2)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
