@@ -9,7 +9,12 @@
     pkgs.air
   ];
   # Sets environment variables in the workspace
-  env = {};
+  env = {
+    CATALOG_ROOT_PATH = "./tmp/books";
+    CATALOG_TITLE = "My OPDS Catalog";
+    CATALOG_USERNAME = "test";
+    CATALOG_PASSWORD = "test";
+  };
   idx = {
     # Search for the extensions you want on https://open-vsx.org/ and use "publisher.id"
     extensions = [

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/herloct/fs2opds/api/v1d2"
+	"github.com/herloct/fs2opds/configs"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
@@ -18,6 +19,12 @@ func main() {
 	// Setup
 	e := echo.New()
 	e.Logger.SetLevel(log.INFO)
+
+	catalogConfig := configs.GetCatalogConfig()
+	if !catalogConfig.IsValid() {
+		e.Logger.Panic("Invalid catalog config")
+	}
+
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
@@ -26,14 +33,17 @@ func main() {
 	})
 
 	groupOpds := e.Group("/opds")
-	groupOpds.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
-		// Be careful to use constant time comparison to prevent timing attacks
-		if subtle.ConstantTimeCompare([]byte(username), []byte("test")) == 1 &&
-			subtle.ConstantTimeCompare([]byte(password), []byte("test")) == 1 {
-			return true, nil
-		}
-		return false, nil
-	}))
+	if catalogConfig.NeedsAuth() {
+		groupOpds.Use(middleware.BasicAuth(func(username, password string, c echo.Context) (bool, error) {
+			// Be careful to use constant time comparison to prevent timing attacks
+			if subtle.ConstantTimeCompare([]byte(username), []byte(catalogConfig.Username)) == 1 &&
+				subtle.ConstantTimeCompare([]byte(password), []byte(catalogConfig.Password)) == 1 {
+				return true, nil
+			}
+
+			return false, nil
+		}))
+	}
 
 	groupV1d2 := groupOpds.Group("/v1.2")
 	v1d2.AppendRoute(groupV1d2)
