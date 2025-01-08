@@ -1,7 +1,6 @@
 package books
 
 import (
-	"log"
 	"path/filepath"
 	"strings"
 	"testing"
