@@ -1,6 +1,9 @@
 package configs
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 type CatalogConfig struct {
 	Title    string
@@ -9,12 +12,12 @@ type CatalogConfig struct {
 	Password string
 }
 
-func (c CatalogConfig) IsValid() bool {
-	if c.Title == "" || c.RootPath == "" {
-		return false
+func (c CatalogConfig) Validate() error {
+	if c.RootPath == "" {
+		return fmt.Errorf("%s is not set", "CATALOG_ROOT_PATH")
 	}
 
-	return true
+	return nil
 }
 
 func (c CatalogConfig) NeedsAuth() bool {
@@ -25,13 +28,19 @@ func (c CatalogConfig) NeedsAuth() bool {
 	return true
 }
 
-func GetCatalogConfig() CatalogConfig {
+func GetCatalogConfig() *CatalogConfig {
+	defaultTitle := "OPDS Catalog"
+
 	catalog := CatalogConfig{
-		Title:    os.Getenv("CATALOG_TITLE"),
 		RootPath: os.Getenv("CATALOG_ROOT_PATH"),
+		Title:    os.Getenv("CATALOG_TITLE"),
 		Username: os.Getenv("CATALOG_USERNAME"),
 		Password: os.Getenv("CATALOG_PASSWORD"),
 	}
 
-	return catalog
+	if catalog.Title == "" {
+		catalog.Title = defaultTitle
+	}
+
+	return &catalog
 }

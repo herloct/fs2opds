@@ -21,8 +21,9 @@ func main() {
 	e.Logger.SetLevel(log.INFO)
 
 	catalogConfig := configs.GetCatalogConfig()
-	if !catalogConfig.IsValid() {
-		e.Logger.Panic("Invalid catalog config")
+	err := catalogConfig.Validate()
+	if err != nil {
+		e.Logger.Panicf("Invalid config: %w", err)
 	}
 
 	e.GET("/", func(c echo.Context) error {
