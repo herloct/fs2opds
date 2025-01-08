@@ -20,11 +20,17 @@ jobs:
     - name: Install dependencies
       run: go mod download
 
+    - name: Create test-results directory
+      run: mkdir test-results
+
     - name: Test
-      run: go test -json -v ./... > test-results.json
+      run: go test -coverprofile=test-results/coverage.out -json -v ./... > test-results/unit-test.json
+
+    - name: Generate coverage
+      run: go tool cover -html=test-results/coverage.out -o test-results/coverage.html
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
       with:
         name: Test results
-        path: test-results.json
+        path: test-results/
