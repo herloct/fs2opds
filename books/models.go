@@ -97,8 +97,12 @@ func (d *Dir) AddChild(child ItemLike) {
 	d.children = append(d.children, child)
 
 	if child.IsDir() {
-		d.childrenHasDir = true
+		d.MarkChildrenHasDir()
 	}
+}
+
+func (d *Dir) MarkChildrenHasDir() {
+	d.childrenHasDir = true
 }
 
 func NewDir(name string, path string, modTime time.Time) Dir {
@@ -111,5 +115,6 @@ func NewDir(name string, path string, modTime time.Time) Dir {
 			modTime: modTime,
 			isDir:   true,
 		},
+		childrenHasDir: false,
 	}
 }
