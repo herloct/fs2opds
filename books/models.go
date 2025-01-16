@@ -1,10 +1,30 @@
 package books
 
 import (
+	"fmt"
+	"math"
 	"path/filepath"
 	"strings"
 	"time"
 )
+
+var baseSymbols = []string{"KB", "MB", "GB"}
+
+var extNameMap = map[string]string{
+	".epub": "EPUB",
+	".mobi": "MOBI",
+	".pdf":  "PDF",
+	".azw":  "AZW",
+	".azw3": "AZW3",
+}
+
+var extMimeMap = map[string]string{
+	".epub": "application/epub+zip",
+	".mobi": "application/x-mobipocket-ebook",
+	".pdf":  "application/pdf",
+	".azw":  "application/vnd.amazon.ebook",
+	".azw3": "application/vnd.amazon.mobi8-ebook",
+}
 
 type ItemLike interface {
 	Name() string
@@ -17,6 +37,9 @@ type FileLike interface {
 	ItemLike
 	Size() int64
 	Ext() string
+	FormattedSize() string
+	ExtName() string
+	MimeType() string
 }
 
 type DirLike interface {
@@ -60,6 +83,36 @@ func (f File) Size() int64 {
 
 func (f File) Ext() string {
 	return f.ext
+}
+
+func (f File) FormattedSize() string {
+	raw := float64(f.size)
+	base := math.Floor(math.Log(float64(raw)) / math.Log(float64(1024)))
+	if base == 0 {
+		return fmt.Sprintf("%d %s", f.size, baseSymbols[int64(base)])
+	}
+
+	value := float64(raw) / math.Pow(float64(1024), base)
+
+	return fmt.Sprintf("%.1f %s", value, baseSymbols[int64(base)])
+}
+
+func (f File) ExtName() string {
+	name, ok := extNameMap[f.ext]
+	if !ok {
+		return "Unknown"
+	}
+
+	return name
+}
+
+func (f File) MimeType() string {
+	mime, ok := extMimeMap[f.ext]
+	if !ok {
+		return "application/octet-stream"
+	}
+
+	return mime
 }
 
 func NewFile(name string, path string, modTime time.Time, size int64) File {
